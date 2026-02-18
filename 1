@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# 指定el文件夹路径（假设位于当前目录）
+EL_DIR="./el"
+
+# 检查el文件夹是否存在
+if [ ! -d "$EL_DIR" ]; then
+    echo "错误：el文件夹不存在于当前目录。"
+    exit 1
+fi
+
+# 启用dotglob以匹配隐藏文件（如.隐藏文件）
+shopt -s dotglob
+
+# 将el内所有文件/文件夹移动到$HOME（强制覆盖同名文件）
+mv -f "$EL_DIR"/* "$HOME"/ 2>/dev/null
+
+# 关闭dotglob（可选）
+shopt -u dotglob
+
+# 尝试删除el文件夹（如果为空）
+rmdir "$EL_DIR" 2>/dev/null
+if [ $? -ne 0 ]; then
+    # 若不为空（如因权限或隐藏文件残留），则强制递归删除
+    echo "警告：el文件夹非空，正在强制删除..."
+    rm -rf "$EL_DIR"
+fi
+
+# 定义别名内容（使用绝对路径，确保任何目录下输入emm都正确）
+ALIAS_CMD="alias emm='~/启动'"
+BASHRC_FILE="$HOME/.bash_profile"
+
+# 确保.bash_profile存在
+touch "$BASHRC_FILE"
+
+# 检查别名是否已存在，若不存在则追加
+if ! grep -Fxq "$ALIAS_CMD" "$BASHRC_FILE"; then
+    echo "$ALIAS_CMD" >> "$BASHRC_FILE"
+    echo "别名已添加到 $BASHRC_FILE"
+else
+    echo "别名已存在，无需重复添加。"
+fi
+
+# 输出最终提示
+echo "工具安装完成，下次启动请输入 emm"
+echo "如果希望立即生效，请执行: source ~/.bash_profile"
